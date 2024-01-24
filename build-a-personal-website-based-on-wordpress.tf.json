@@ -1,0 +1,255 @@
+{
+  "terraform": {
+    "required_providers": [
+      {
+        "huaweicloud": {
+          "source": "huawei.com/provider/huaweicloud",
+          "version": ">=1.42.0"
+        }
+      }
+    ]
+  },
+  "provider": {
+    "huaweicloud": {
+      "cloud": "myhuaweicloud.com",
+      "endpoints": {
+        "iam": "iam.ap-southeast-3.myhuaweicloud.com",
+        "dns": "dns.ap-southeast-3.myhuaweicloud.com",
+        "bss": "bss-intl.myhuaweicloud.com"
+      },
+      "insecure": true,
+      "region": "ap-southeast-3",
+      "auth_url": "https://iam.ap-southeast-3.myhuaweicloud.com/v3"
+    }
+  },
+  "variable": {
+    "vpc_name": {
+      "default": "build-a-personal-website-based-on-wordpress_demo",
+      "description": "Virtual Private Cloud (VPC) name. This template uses a newly created VPC and the VPC name must be unique. Value range: 1 to 57 characters, including letters, digits, underscores (_), hyphens (-), and periods (.). Default value: build-a-personal-website-based-on-wordpress_demo",
+      "type": "string",
+      "nullable": "false"
+    },
+    "secgroup_name": {
+      "default": "build-a-personal-website-based-on-wordpress_demo",
+      "description": "Security group name. This template uses a newly created security group. For details about how to set security group rules, see the deployment guide. The value can contain 1 to 64 characters, including letters, digits, underscores (_), hyphens (-), and periods (.). Default value: build-a-personal-website-based-on-wordpress_demo",
+      "type": "string",
+      "nullable": "false"
+    },
+    "eip_traffic_size": {
+      "default": 300,
+      "description": "EIP bandwidth size. This template uses an EIP billed by traffic. Value range: 1 to 300 Mbit/s. Default value: 300 Mbit/s",
+      "type": "number",
+      "nullable": "false",
+      "validation": {
+        "condition": "${length(regexall(\"^([1-9]|[1-9]\\\\d|1\\\\d{2}|2[0-9]{2}|300)$\",var.eip_traffic_size))>0}",
+        "error_message": "Invalid input, please re-enter."
+      }
+    },
+    "ecs_name": {
+      "default": "build-a-personal-website-based-on-wordpress_demo",
+      "description": "ECS name, which must be unique. The naming format is {ecs_name}_ecs. The value can contain 1 to 60 characters, including letters, digits, underscores (_), hyphens (-), and periods (.). Default value: build-a-personal-website-based-on-wordpress_demo",
+      "type": "string",
+      "nullable": "false"
+    },
+    "ecs_flavor": {
+      "default": "t6.medium.2",
+      "description": "ECS flavor. For details, see the deployment guide. Default value: s7n.medium.4 (s7n|1vCPUs|4GiB)",
+      "type": "string",
+      "nullable": "false",
+      "validation": {
+        "condition": "${length(regexall(\"^([a-z][a-z0-9]{0,3}\\\\.)(small\\\\.|medium\\\\.|(x||[1-9][0-9]{0,1}x)large\\\\.)[1-9][0-9]{0,1}$\",var.ecs_flavor))>0}",
+        "error_message": "Invalid input. Please re-enter."
+      }
+    },
+    "ecs_password": {
+      "default": "",
+      "description": "ECS initial password. After an ECS is created, log in to the ECS console and change the password by referring to the deployment guide. The password can contain 8 to 26 characters, including at least three types of the following characters: uppercase letters, lowercase letters, digits, and special characters (!@$%^-_=+[{}]:,./?), and it cannot contain any username or the username spelled backwards. The administrator is root.",
+      "type": "string",
+      "nullable": "false",
+      "sensitive": true
+    },
+    "system_disk_size": {
+      "default": 40,
+      "description": "System disk size, in GiB. Value range: 40 to 1024. The system disk size cannot be scaled down. Default value: 40",
+      "type": "number",
+      "nullable": "false",
+      "validation": {
+        "condition": "${length(regexall(\"^([4-9]\\\\d|[1-9]\\\\d{2}|10[0-1][0-9]|102[0-4])$\",var.system_disk_size))>0}",
+        "error_message": "Invalid input, please re-enter."
+      }
+    },
+    "data_disk_size": {
+      "default": 110,
+      "description": "Data disk size, in GiB. Value range: 10 to 32768. Default value: 250",
+      "type": "number",
+      "nullable": "false",
+      "validation": {
+        "condition": "${length(regexall(\"^(1[0-9]|[2-9][0-9]|[1-9][0-9]{2,3}|[1-2][0-9]{4}|3[0-1][0-9]{3}|32[0-6][0-9]{2}|327[0-5][0-9]|3276[0-8])$\",var.data_disk_size))>0}",
+        "error_message": "Invalid input, please re-enter."
+      }
+    },
+    "charging_mode": {
+      "default": "prePaid",
+      "description": "ECS billing mode. By default, expenses are automatically deducted. The value can be prePaid (yearly/monthly) or postPaid (pay-per-use). Default value: prePaid",
+      "type": "string",
+      "nullable": "false",
+      "validation": {
+        "condition": "${contains([\"postPaid\",\"prePaid\"], var.charging_mode)}",
+        "error_message": "Invalid input, please re-enter."
+      }
+    },
+    "charging_unit": {
+      "default": "month",
+      "description": "Unit of a subscription period. This parameter is mandatory when the charging_mode is set to prePaid (yearly/monthly). Value range: month and year. Default value: month",
+      "type": "string",
+      "nullable": "false",
+      "validation": {
+        "condition": "${contains([\"month\",\"year\"], var.charging_unit)}",
+        "error_message": "Invalid input, please re-enter."
+      }
+    },
+    "charging_period": {
+      "default": 1,
+      "description": "Subscription period. This parameter is mandatory when the charging_mode is set to prePaid (yearly/monthly). If charging_unit is set to month, the value ranges from 1 to 9. If charging_unit is set to year, the value ranges from 1 to 3. Default value: 1",
+      "type": "number",
+      "nullable": "false",
+      "validation": {
+        "condition": "${length(regexall(\"^[1-9]$\",var.charging_period))>0}",
+        "error_message": "Invalid input, please re-enter."
+      }
+    },
+    "mysql_password": {
+      "default": "",
+      "description": "Initial password of MySQL root user. After a MySQL database is created, you can change its password by referring to the deployment guide. The password can contain 8 to 12 characters, including uppercase letters, lowercase letters, digits, and special characters (@%^-=).",
+      "type": "string",
+      "nullable": "false",
+      "sensitive": true
+    },
+    "database_username": {
+      "default": "wordpressuser",
+      "description": "Username of the MySQL database. The username can contain 8 to 16 characters, which can be all letters or a combination of letters and digits. Default value: wordpressuser",
+      "type": "string",
+      "nullable": "false",
+      "validation": {
+        "condition": "${length(regexall(\"^[a-zA-Z0-9]{8,16}$\",var.database_username))>0}",
+        "error_message": "Invalid input, please re-enter."
+      }
+    },
+    "database_password": {
+      "default": "",
+      "description": "Password of the MySQL database user. After a MySQL database is created, you can change its password by referring to the deployment guide. The password can include 8 to 12 characters and can contain uppercase letters, lowercase letters, digits, and special characters(@%^-=).",
+      "type": "string",
+      "nullable": "false",
+      "sensitive": true
+    }
+  },
+  "data": {
+    "huaweicloud_availability_zones": {
+      "availability_zones": {}
+    },
+    "huaweicloud_images_image": {
+      "CentOS": {
+        "most_recent": true,
+        "name": "CentOS 7.6 64bit",
+        "visibility": "public"
+      }
+    }
+  },
+  "resource": {
+    "huaweicloud_vpc": {
+      "vpc": {
+        "cidr": "172.16.0.0/24",
+        "name": "${var.vpc_name}"
+      }
+    },
+    "huaweicloud_vpc_subnet": {
+      "subnet": {
+        "availability_zone": "${data.huaweicloud_availability_zones.availability_zones.names[0]}",
+        "cidr": "${huaweicloud_vpc.vpc.cidr}",
+        "gateway_ip": "172.16.0.1",
+        "name": "${var.vpc_name}_subnet",
+        "vpc_id": "${huaweicloud_vpc.vpc.id}"
+      }
+    },
+    "huaweicloud_networking_secgroup": {
+      "secgroup": {
+        "name": "${var.secgroup_name}"
+      }
+    },
+    "huaweicloud_networking_secgroup_rule": {
+      "allow_ping": {
+        "description": "Allows to test the ECS connectivity with the ping command.",
+        "direction": "ingress",
+        "ethertype": "IPv4",
+        "protocol": "icmp",
+        "remote_ip_prefix": "0.0.0.0/0",
+        "security_group_id": "${huaweicloud_networking_secgroup.secgroup.id}"
+      },
+      "allow_ssh_linux": {
+        "description": "Allows remote access to Linux ECSs using SSH.",
+        "direction": "ingress",
+        "ethertype": "IPv4",
+        "ports": 22,
+        "protocol": "tcp",
+        "remote_ip_prefix": "172.16.0.0/24",
+        "security_group_id": "${huaweicloud_networking_secgroup.secgroup.id}"
+      },
+      "allow_all": {
+        "description": "Network port of the WordPress site",
+        "direction": "ingress",
+        "ethertype": "IPv4",
+        "ports": 80,
+        "protocol": "tcp",
+        "remote_ip_prefix": "0.0.0.0/0",
+        "security_group_id": "${huaweicloud_networking_secgroup.secgroup.id}"
+      }
+    },
+    "huaweicloud_vpc_eip": {
+      "myeip": {
+        "bandwidth": {
+          "charge_mode": "traffic",
+          "name": "${var.ecs_name}_eip",
+          "share_type": "PER",
+          "size": "${var.eip_traffic_size}"
+        },
+        "publicip": {
+          "type": "5_bgp"
+        },
+        "charging_mode": "postPaid"
+      }
+    },
+    "huaweicloud_compute_instance": {
+      "instance": {
+        "name": "${var.ecs_name}_ecs",
+        "image_id": "${data.huaweicloud_images_image.CentOS.id}",
+        "flavor_id": "${var.ecs_flavor}",
+        "security_group_ids": [
+          "${huaweicloud_networking_secgroup.secgroup.id}"
+        ],
+        "availability_zone": "${data.huaweicloud_availability_zones.availability_zones.names[0]}",
+        "system_disk_type": "GPSSD",
+        "system_disk_size": "${var.system_disk_size}",
+        "charging_mode": "${var.charging_mode}",
+        "period_unit": "${var.charging_unit}",
+        "period": "${var.charging_period}",
+        "admin_pass": "${var.ecs_password}",
+        "data_disks": {
+          "size": "${var.data_disk_size}",
+          "type": "GPSSD"
+        },
+        "delete_disks_on_termination": true,
+        "network": {
+          "fixed_ip_v4": "172.16.0.10",
+          "uuid": "${huaweicloud_vpc_subnet.subnet.id}"
+        },
+        "eip_id": "${huaweicloud_vpc_eip.myeip.id}",
+        "user_data": "#!/bin/bash\necho 'root:${var.ecs_password}'|chpasswd\nwget -P /tmp/ https://documentation-samples.obs.cn-north-4.myhuaweicloud.com/solution-as-code-publicbucket/solution-as-code-moudle/build-a-personal-website-based-on-wordpress/userdata/install_wordpress.sh\nchmod 744 /tmp/install_wordpress.sh\nsh /tmp/install_wordpress.sh ${var.mysql_password} ${var.database_username} ${var.database_password}\nrm -rf /tmp/install_wordpress.sh"
+      }
+    }
+  },
+  "output": {
+    "Login": {
+      "value": "After this solution is successfully deployed, it takes about 20 to 30 minutes to run the stript (affected by network fluctuation). Enter http://${huaweicloud_vpc_eip.myeip.address}/wordpress in the address bar to access the website."
+    }
+  }
+}
