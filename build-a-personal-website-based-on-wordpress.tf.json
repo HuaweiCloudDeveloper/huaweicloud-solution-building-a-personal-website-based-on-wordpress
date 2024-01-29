@@ -52,7 +52,7 @@
       "nullable": "false"
     },
     "ecs_flavor": {
-      "default": "t6.medium.2",
+      "default": "s7n.medium.4",
       "description": "ECS flavor. For details, see the deployment guide. Default value: s7n.medium.4 (s7n|1vCPUs|4GiB)",
       "type": "string",
       "nullable": "false",
